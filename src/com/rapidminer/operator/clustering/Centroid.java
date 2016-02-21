@@ -64,7 +64,13 @@ public class Centroid implements Serializable {
 		}
 	}
 	
-
+	public void resignExample(double[] exampleValues) {
+		numberOfAssigned--;
+		for (int i = 0; i < exampleValues.length; i++) {
+			centroidSum[i] -= exampleValues[i];
+		}
+	}
+	
 	public boolean finishAssign() {
 		double[] newCentroid = new double[centroid.length];
 		boolean stable = true;
@@ -76,6 +82,14 @@ public class Centroid implements Serializable {
 		centroidSum = new double[centroidSum.length];
 		numberOfAssigned = 0;
 		return stable;
+	}
+	
+	public void recalculateCentroid() {
+		double[] newCentroid = new double[centroid.length];
+		for (int i = 0; i < centroid.length; i++) {
+			newCentroid[i] = centroidSum[i] / numberOfAssigned;
+		}
+		centroid = newCentroid;
 	}
 
 	/** 

@@ -86,9 +86,14 @@ public class SortedExampleSet extends AbstractExampleSet {
 		public String toString() {
 			return key + " --> " + index;
 		}
-
+		
 	}
 
+	public int[] getMapping() {
+		return this.mapping;
+	}
+
+	
 	/** The parent example set. */
 	private ExampleSet parent;
 

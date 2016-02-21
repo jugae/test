@@ -1,0 +1,1 @@
+java -Xmx16384m -jar C:\Users\administrator.B2-SOFTWARE\workspace-eclipse\rapidminer-code\lib\rapidminer.jar

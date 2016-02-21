@@ -1120,6 +1120,12 @@
 					<replaces>ChangeAttributeNamesReplace</replaces>
 				</operator>
 				<operator>
+					<key>ma_rename_by_ex</key>
+					<class>com.rapidminer.operator.preprocessing.filter.MAChangeAttributeNamesReplace
+					</class>
+					<replaces>MA Rename by Example Set</replaces>
+				</operator>
+				<operator>
 					<key>rename_by_generic_names</key>
 					<class>com.rapidminer.operator.preprocessing.filter.ChangeAttributeNames2Generic
 					</class>
@@ -1267,11 +1273,24 @@
 						</class>
 						<replaces>FrequencyDiscretization</replaces>
 					</operator>
+					
+				<operator>
+					<key>discretize_by_binwidth</key>
+					<class>com.rapidminer.operator.preprocessing.discretization.BinWidthDiscretization
+					</class>
+					<replaces>BinWidthDiscretization</replaces>
+				</operator>
 					<operator>
 						<key>discretize_by_user_specification</key>
 						<class>com.rapidminer.operator.preprocessing.discretization.UserBasedDiscretization
 						</class>
 						<replaces>UserBasedDiscretization</replaces>
+					</operator>
+					<operator>
+						<key>discretize_by_example_set_specification</key>
+						<class>com.rapidminer.operator.preprocessing.discretization.UserBasedDiscretizationDict
+						</class>
+						<replaces>ExampleSetBasedDiscretization</replaces>
 					</operator>
 					<operator>
 						<key>discretize_by_entropy</key>
@@ -2321,6 +2340,16 @@
 					</class>
 				</operator>
 				<operator>
+					<key>fast_k_means_subseq</key>
+					<class>com.rapidminer.operator.clustering.clusterer.FastKMeansSubseq
+					</class>
+				</operator>
+				<operator>
+					<key>k_means_mac_queen</key>
+					<class>com.rapidminer.operator.clustering.clusterer.KMeansMacQueen
+					</class>
+				</operator>
+				<operator>
 					<key>x_means</key>
 					<class>com.rapidminer.operator.clustering.clusterer.XMeans</class>
 				</operator>
@@ -2334,6 +2363,21 @@
 					<key>dbscan</key>
 					<class>com.rapidminer.operator.clustering.clusterer.DBScan</class>
 					<replaces>DBScanClustering</replaces>
+				</operator>
+				<operator>
+					<key>dbscanoneattr</key>
+					<class>com.rapidminer.operator.clustering.clusterer.DBScanOneAttribute</class>
+					<replaces>DBScanClusteringOne</replaces>
+				</operator>
+				<operator>
+					<key>dbscanweighted</key>
+					<class>com.rapidminer.operator.clustering.clusterer.DBScanWeighted</class>
+					<replaces>DBScanWeighted</replaces>
+				</operator>
+				<operator>
+					<key>kdist</key>
+					<class>com.rapidminer.operator.preprocessing.transformation.KnnDistance</class>
+					<replaces>KDistance</replaces>
 				</operator>
 				<operator>
 					<key>expectation_maximization_clustering</key>

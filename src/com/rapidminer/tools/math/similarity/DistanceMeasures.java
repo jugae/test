@@ -60,6 +60,7 @@ import com.rapidminer.tools.math.similarity.numerical.DTWDistance;
 import com.rapidminer.tools.math.similarity.numerical.DiceNumericalSimilarity;
 import com.rapidminer.tools.math.similarity.numerical.EuclideanDistance;
 import com.rapidminer.tools.math.similarity.numerical.InnerProductSimilarity;
+import com.rapidminer.tools.math.similarity.numerical.InvEuclideanDistance;
 import com.rapidminer.tools.math.similarity.numerical.JaccardNumericalSimilarity;
 import com.rapidminer.tools.math.similarity.numerical.KernelEuclideanDistance;
 import com.rapidminer.tools.math.similarity.numerical.ManhattanDistance;
@@ -120,6 +121,7 @@ public class DistanceMeasures {
 
 	/* If this changes, the parameter dependencies might need to be updated */
 	private static String[] NUMERICAL_MEASURES = new String[] {
+		"Inverse EuclideanDistance",
 		"EuclideanDistance",
 		"CamberraDistance",
 		"ChebychevDistance",
@@ -135,6 +137,7 @@ public class DistanceMeasures {
 		"OverlapSimilarity"
 	};
 	private static Class[] NUMERICAL_MEASURE_CLASSES = new Class[] {
+		InvEuclideanDistance.class,
 		EuclideanDistance.class,
 		CamberraNumericalDistance.class,
 		ChebychevNumericalDistance.class,

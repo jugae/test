@@ -1,0 +1,1 @@
+java -Xmx1024m -jar C:\rapidminer\lib\rapidminer.jar
