@@ -1293,6 +1293,12 @@
 						<replaces>ExampleSetBasedDiscretization</replaces>
 					</operator>
 					<operator>
+						<key>discretize_by_example_sets</key>
+						<class>com.rapidminer.operator.preprocessing.discretization.UserBasedDiscretizationDicts
+						</class>
+						<replaces>ExampleSetsBasedDiscretization</replaces>
+					</operator>
+					<operator>
 						<key>discretize_by_entropy</key>
 						<class>com.rapidminer.operator.preprocessing.discretization.MinimalEntropyDiscretization
 						</class>

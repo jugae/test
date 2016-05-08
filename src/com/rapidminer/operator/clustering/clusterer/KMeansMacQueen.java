@@ -197,20 +197,49 @@ public class KMeansMacQueen extends RMAbstractClusterer implements CapabilityPro
 
 		// SORT TO DISTANCE FROM DATABASE CENTROID
 		
-		Map<Double,Integer> distanceMap = new TreeMap<Double,Integer>();
+//		Map<Double,Integer> distanceMap = new TreeMap<Double,Integer>();
+//		for (int i=0; i<exampleSet.size(); i++) {
+//			Example testExample = exampleSet.getExample(i);
+//			double distance = measure.calculateDistance(testExample, exampleCentroidValues);
+//			distance = 1/ distance;
+//			
+//			distanceMap.put(distance, i);
+//		}
+//	
+//		int iterator=0;
+//		for (Map.Entry entry : distanceMap.entrySet()) {
+//			sortingIndex.put(iterator, (Integer)entry.getValue());
+////			System.out.println("Key : " + entry.getKey() + " Value : " + entry.getValue());
+//			iterator++;
+//		}
+		
+		// NEW SORT TO DISTANCE FROM DATABASE CENTROID
+		// This is neccessary because a value can occour more then one time.
+		Map<Double,ArrayList<Integer>> distanceMap = new TreeMap<Double,ArrayList<Integer>>();
 		for (int i=0; i<exampleSet.size(); i++) {
 			Example testExample = exampleSet.getExample(i);
 			double distance = measure.calculateDistance(testExample, exampleCentroidValues);
 			distance = 1/ distance;
 			
-			distanceMap.put(distance, i);
+			ArrayList<Integer> list = distanceMap.get(distance);
+			if(list == null) {
+				list = new ArrayList<Integer>(exampleSet.size());
+				distanceMap.put(distance, list);
+			}
+			list.add(i);
+//			distanceMap.put(distance, i);
 		}
 	
-		int iterator=0;
-		for (Map.Entry entry : distanceMap.entrySet()) {
-			sortingIndex.put(iterator, (Integer)entry.getValue());
-//			System.out.println("Key : " + entry.getKey() + " Value : " + entry.getValue());
-			iterator++;
+		int iterator=exampleSet.size()-1;
+		for (Map.Entry<Double,ArrayList<Integer>> entry : distanceMap.entrySet()) {
+			@SuppressWarnings("unchecked")
+			ArrayList<Integer> list = (ArrayList<Integer>)entry.getValue();
+			
+			for (Integer integer : list) {
+				sortingIndex.put(iterator, integer);	
+				iterator--;
+			}
+			//System.out.println("Key : " + entry.getKey() + " Value : " + entry.getValue());
 		}
 		
 		// ZUFALL
@@ -248,11 +277,15 @@ public class KMeansMacQueen extends RMAbstractClusterer implements CapabilityPro
 				}
 			}
 			else {
-				for (int kIter=0; kIter<k; kIter++) {
-					model.assignExample(i, defaultCentroid);
+				for (Integer index : generator.nextIntSetWithRange(0, exampleSet.size(), k)) {
+					model.assignExample(i, getAsDoubleArray(exampleSet.getExample(index), attributes, values));
 					i++;
-				}
-				
+				}		
+				// MAX DOUBLE
+//				for (int kIter=0; kIter<k; kIter++) {
+//					model.assignExample(i, defaultCentroid);
+//					i++;
+//				}			
 //				for (Integer index : generator.nextIntSetWithRange(0, exampleSet.size(), k)) {
 //					model.assignExample(i, getAsDoubleArray(exampleSet.getExample(index), attributes, values));
 //					i++;
@@ -260,143 +293,63 @@ public class KMeansMacQueen extends RMAbstractClusterer implements CapabilityPro
 			}
 			model.finishAssign();
 
-			int[] centroidAssignments = new int[exampleSet.size()];
-			// assign examples to new centroids
-			for (i=0; i<sortingIndex.size(); i++) {
-				if( sortingIndex.get((Integer)i) == null) {
-					System.out.println("fehler");
-				}
-				int exampleIndex = sortingIndex.get((Integer)i);
-				Example example = exampleSet.getExample(exampleIndex);
-				
-				double[] exampleValues = getAsDoubleArray(example, attributes, values);
-				double nearestDistance = measure.calculateDistance(model.getCentroidCoordinates(0), exampleValues);
-				int nearestIndex = 0;
-				for (int centroidIndex = 1; centroidIndex < k; centroidIndex++) {
-					double distance = measure.calculateDistance(model.getCentroidCoordinates(centroidIndex), exampleValues);
-					if (distance < nearestDistance) {
-						nearestDistance = distance;
-						nearestIndex = centroidIndex;
-					}
-				}
-				centroidAssignments[i] = nearestIndex;
-				model.getCentroid(nearestIndex).assignExample(exampleValues);
-				model.getCentroid(nearestIndex).recalculateCentroid();
-			}
 			
 			// run optimization steps
+			int[] optimizedCentroidAssignments = new int[exampleSet.size()];
 			
 			if(optimizeCentroid) {
 			
 				boolean stable = false;
-				for (int step = 0; (step < maxOptimizationSteps) && !stable; step++) {
+				for (int step = 0; (step < maxOptimizationSteps); step++) {
 					checkForStop();
 					
-	
-					
-					for (int ie=0; ie<exampleSet.size(); ie++) {
-						Example example = exampleSet.getExample(ie);
-						int clusterIndex = centroidAssignments[ie];
+					int[] centroidAssignments = new int[exampleSet.size()];
+					for (i=0; i<exampleSet.size(); i++) {
+						centroidAssignments[i] = -1;
+					}
+					// assign examples to new centroids
+					for (i=0; i<sortingIndex.size(); i++) {
+						if( sortingIndex.get((Integer)i) == null) {
+							System.out.println("fehler");
+						}
+						int exampleIndex = sortingIndex.get((Integer)i);
+						Example example = exampleSet.getExample(exampleIndex);
 						
-						// calc current cluster distance to database centroid from the cluster of the current example
-						Centroid centroid = model.getCentroid(clusterIndex);
-						double currentClusterDistance = 1/measure.calculateDistance(centroid.getCentroid(),exampleCentroidValues);
-						double bestDistanceGain = 0;
-						int bestClusterIndex = clusterIndex;
-						
-						for (int ci=0; ci<k; ci++) {
-							if (clusterIndex == ci) continue;
-							
-							// calc current test distance
-							Centroid testCentroid = model.getCentroid(ci);
-							double testClusterDistance = 1/measure.calculateDistance(testCentroid.getCentroid(),exampleCentroidValues);
-							
-							centroid.resignExample(getAsDoubleArray(example, attributes, values));
-							testCentroid.assignExample(getAsDoubleArray(example, attributes, values));
-							centroid.recalculateCentroid();
-							testCentroid.recalculateCentroid();
-							
-							double newCurrentClusterDistance = 1/measure.calculateDistance(centroid.getCentroid(),exampleCentroidValues);
-							double newTestClusterDistance = 1/measure.calculateDistance(testCentroid.getCentroid(),exampleCentroidValues);
-							
-							double distanceGain = (currentClusterDistance+testClusterDistance) - (newCurrentClusterDistance+newTestClusterDistance);
-							if (distanceGain > bestDistanceGain ) {
-								bestDistanceGain = distanceGain;
-								bestClusterIndex = ci;
+						double[] exampleValues = getAsDoubleArray(example, attributes, values);
+						double nearestDistance = measure.calculateDistance(model.getCentroidCoordinates(0), exampleValues);
+						int nearestIndex = 0;
+						for (int centroidIndex = 1; centroidIndex < k; centroidIndex++) {
+							double distance = measure.calculateDistance(model.getCentroidCoordinates(centroidIndex), exampleValues);
+							if (distance < nearestDistance) {
+								nearestDistance = distance;
+								nearestIndex = centroidIndex;
 							}
-	
-							centroid.assignExample(getAsDoubleArray(example, attributes, values));
-							testCentroid.resignExample(getAsDoubleArray(example, attributes, values));
-							centroid.recalculateCentroid();
-							testCentroid.recalculateCentroid();
 						}
+						centroidAssignments[i] = nearestIndex;
+						model.getCentroid(nearestIndex).assignExample(exampleValues);
+						model.getCentroid(nearestIndex).recalculateCentroid();
 						
-						if (bestClusterIndex != clusterIndex) {
-							System.out.println("Found a better place for example " + example.getId() + " : " + clusterIndex + " => " + bestClusterIndex);
-							Centroid newCentroid = model.getCentroid(bestClusterIndex);
-							centroid.resignExample(getAsDoubleArray(example, attributes, values));
-							newCentroid.assignExample(getAsDoubleArray(example, attributes, values));
-							centroid.recalculateCentroid();
-							newCentroid.recalculateCentroid();
-						}
+						//debug(exampleSet, attributes, values, model, centroidAssignments,sortingIndex);
 					}
 			
-				
-				
-	//				i = 0;
-	//				for (Example example : exampleSet) {
-	//					double[] exampleValues = getAsDoubleArray(example, attributes, values);
-	//					double nearestDistance = measure.calculateDistance(model.getCentroidCoordinates(0), exampleValues);
-	//					int nearestIndex = 0;
-	//					for (int centroidIndex = 1; centroidIndex < k; centroidIndex++) {
-	//						double distance = measure.calculateDistance(model.getCentroidCoordinates(centroidIndex), exampleValues);
-	//						if (distance < nearestDistance) {
-	//							nearestDistance = distance;
-	//							nearestIndex = centroidIndex;
-	//						}
-	//					}
-	//					centroidAssignments[i] = nearestIndex;
-	//					model.getCentroid(nearestIndex).assignExample(exampleValues);
-	//					model.getCentroid(nearestIndex).recalculateCentroid();
-	//					i++;
-	//				}
-	
-					// finishing assignment
-					stable = model.finishAssign();
-				}	
+					double distanceSum = 0;
+					i = 0;
+					for (Example example : exampleSet) {
+						double distance = measure.calculateDistance(model.getCentroidCoordinates(centroidAssignments[i]), getAsDoubleArray(example, attributes, values));
+						distanceSum += distance * distance;
+						i++;
+					}
+					if (distanceSum < minimalIntraClusterDistance) {
+						System.out.println("Find a better model: " + distanceSum + "");
+						bestModel = model;
+						minimalIntraClusterDistance = distanceSum;
+						bestAssignments = centroidAssignments;
+					}
+				}
+				// finishing assignment
+				stable = model.finishAssign();
 			}
-			
-			// own quality model
-			int[] clusterCount = new int[model.getNumberOfClusters()];
-			for (i=0; i<exampleSet.size(); i++) {
-				clusterCount[centroidAssignments[i]]++;
-			}
-			
-			double deviation = 0;
-			for (i=0; i<clusterCount.length; i++) {
-				deviation += (double)Math.pow(clusterCount[i]-averageExampleCount, 2);
-			}
-			deviation /= (double)clusterCount.length;
-			if (deviation < minimalDeviation) {
-				System.out.println("New minimal deviation: " + deviation);
-				bestModel = model;
-				minimalDeviation = deviation;
-				bestAssignments = centroidAssignments;
-			}
-			
-//			// assessing quality of this model
-//			double distanceSum = 0;
-//			i = 0;
-//			for (Example example : exampleSet) {
-//				double distance = measure.calculateDistance(model.getCentroidCoordinates(centroidAssignments[i]), getAsDoubleArray(example, attributes, values));
-//				distanceSum += distance * distance;
-//				i++;
-//			}
-//			if (distanceSum < minimalIntraClusterDistance) {
-//				bestModel = model;
-//				minimalIntraClusterDistance = distanceSum;
-//				bestAssignments = centroidAssignments;
-//			}
+
 		}
 		bestModel.setClusterAssignments(bestAssignments, exampleSet);
 
@@ -420,6 +373,70 @@ public class KMeansMacQueen extends RMAbstractClusterer implements CapabilityPro
 		}
 
 		return bestModel;
+	}
+
+	public void debug(ExampleSet exampleSet, Attributes attributes, double[] values, CentroidClusterModel model, int[] centroidAssignments,HashMap<Integer, Integer> sortingIndex) {
+		int counter = 0;
+		for(int ca=0;ca<exampleSet.size(); ca++) {
+			int index = sortingIndex.get(ca);
+			if(centroidAssignments[ca]==-1 ) {
+				Example ex = exampleSet.getExample(index);
+				double[] exVal = getAsDoubleArray(ex, attributes, values);
+				System.out.println(exVal[0] + ";" + exVal[1]);
+				counter++;
+			}
+		}
+		if(counter==0) {
+			System.out.println("-1;-1");
+		}
+		
+		
+		counter=0;
+		System.out.println("");
+		System.out.println("");
+		for(int ca=0;ca<exampleSet.size(); ca++) {
+			if(centroidAssignments[ca]==0 ) {
+				int index = sortingIndex.get(ca);
+				Example ex = exampleSet.getExample(index);
+				double[] exVal = getAsDoubleArray(ex, attributes, values);
+				System.out.println(exVal[0] + ";" + exVal[1]);
+				counter++;
+			}
+		}
+		if(counter==0) {
+			System.out.println("-1;-1");
+		}
+		
+		
+		counter=0;
+		System.out.println("");
+		System.out.println("");
+		for(int ca=0;ca<exampleSet.size(); ca++) {
+			if(centroidAssignments[ca]==1 ) {
+				int index = sortingIndex.get(ca);
+				Example ex = exampleSet.getExample(index);
+				double[] exVal = getAsDoubleArray(ex, attributes, values);
+				System.out.println(exVal[0] + ";" + exVal[1]);
+				counter++;
+			}
+		}
+		if(counter==0) {
+			System.out.println("-1;-1");
+		}
+		
+		counter=0;
+		System.out.println("");
+		System.out.println("");
+		for(int ai=0;ai<model.getCentroids().size(); ai++) {
+			Centroid ex = model.getCentroids().get(ai);
+			double[] exVal = ex.getCentroid();
+			System.out.println(exVal[0] + ";" + exVal[1]);
+			counter++;
+		}
+		if(counter==0) {
+			System.out.println("-1;-1");
+		}
+		System.out.println("");
 	}
 
 	private double[] getAsDoubleArray(Example example, Attributes attributes, double[] values) {

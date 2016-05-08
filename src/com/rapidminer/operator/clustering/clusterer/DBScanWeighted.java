@@ -189,7 +189,7 @@ public class DBScanWeighted extends RMAbstractClusterer implements CapabilityPro
 			visited[currentIndex] = true;
 		
 			// appending own neighbourhood to queue
-			Object[] list = getNeighbourhoodWithoutVisited(exampleSet, currentIndex);
+			Object[] list = getNeighbourhood(exampleSet, currentIndex);
 			Queue<Integer> neighbourhood = (Queue<Integer>)list[0];
 			int neighboursCount = (Integer) list[1];
 			

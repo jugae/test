@@ -23,6 +23,7 @@
 package com.rapidminer.operator.clustering.clusterer;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import com.rapidminer.example.Attribute;
@@ -35,6 +36,7 @@ import com.rapidminer.operator.OperatorCapability;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.UserError;
+import com.rapidminer.operator.clustering.Centroid;
 import com.rapidminer.operator.clustering.CentroidClusterModel;
 import com.rapidminer.operator.clustering.ClusterModel;
 import com.rapidminer.operator.learner.CapabilityProvider;
@@ -174,6 +176,7 @@ public class KMeans extends RMAbstractClusterer implements CapabilityProvider {
 					model.getCentroid(nearestIndex).assignExample(exampleValues);
 					i++;
 				}
+				debug(exampleSet, attributes, values, model, centroidAssignments);
 
 				// finishing assignment
 				stable = model.finishAssign();
@@ -277,4 +280,66 @@ public class KMeans extends RMAbstractClusterer implements CapabilityProvider {
 		types.addAll(RandomGenerator.getRandomGeneratorParameters(this));
 		return types;
 	}
+	
+	public void debug(ExampleSet exampleSet, Attributes attributes, double[] values, CentroidClusterModel model, int[] centroidAssignments) {
+		int counter = 0;
+		for(int ca=0;ca<exampleSet.size(); ca++) {
+			if(centroidAssignments[ca]==-1 ) {
+				Example ex = exampleSet.getExample(ca);
+				double[] exVal = getAsDoubleArray(ex, attributes, values);
+				System.out.println(exVal[0] + ";" + exVal[1]);
+				counter++;
+			}
+		}
+		if(counter==0) {
+			System.out.println("-1;-1");
+		}
+		
+		
+		counter=0;
+		System.out.println("");
+		System.out.println("");
+		for(int ca=0;ca<exampleSet.size(); ca++) {
+			if(centroidAssignments[ca]==0 ) {
+				Example ex = exampleSet.getExample(ca);
+				double[] exVal = getAsDoubleArray(ex, attributes, values);
+				System.out.println(exVal[0] + ";" + exVal[1]);
+				counter++;
+			}
+		}
+		if(counter==0) {
+			System.out.println("-1;-1");
+		}
+		
+		
+		counter=0;
+		System.out.println("");
+		System.out.println("");
+		for(int ca=0;ca<exampleSet.size(); ca++) {
+			if(centroidAssignments[ca]==1 ) {
+				Example ex = exampleSet.getExample(ca);
+				double[] exVal = getAsDoubleArray(ex, attributes, values);
+				System.out.println(exVal[0] + ";" + exVal[1]);
+				counter++;
+			}
+		}
+		if(counter==0) {
+			System.out.println("-1;-1");
+		}
+		
+		counter=0;
+		System.out.println("");
+		System.out.println("");
+		for(int ai=0;ai<model.getCentroids().size(); ai++) {
+			Centroid ex = model.getCentroids().get(ai);
+			double[] exVal = ex.getCentroid();
+			System.out.println(exVal[0] + ";" + exVal[1]);
+			counter++;
+		}
+		if(counter==0) {
+			System.out.println("-1;-1");
+		}
+		System.out.println("");
+	}
+
 }
